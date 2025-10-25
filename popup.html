@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .status {
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .enabled {
+      background: #e8f5e8;
+      color: #2e7d32;
+    }
+    .disabled {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .enable-btn {
+      background: #4caf50;
+      color: white;
+    }
+    .disable-btn {
+      background: #f44336;
+      color: white;
+    }
+    .info {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #666;
+    }
+    .supported-platforms {
+      margin-top: 10px;
+      font-size: 11px;
+    }
+    .platform-list {
+      columns: 2;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h3>🛡️ PrivacyAIShield</h3>
+  </div>
+  
+  <div id="status" class="status enabled">
+    Protección ACTIVADA
+  </div>
+  
+  <button id="toggle" class="disable-btn">Desactivar Protección</button>
+  
+  <div class="info">
+    <p><strong>Tipos de información bloqueada:</strong></p>
+    <ul>
+      <li>Contraseñas</li>
+      <li>Tarjetas de crédito</li>
+      <li>IBANs</li>
+      <li>Emails/teléfonos</li>
+      <li>Claves secretas</li>
+    </ul>
+    
+    <div class="supported-platforms">
+      <strong>Plataformas soportadas:</strong>
+      <div class="platform-list">
+        <div>• ChatGPT</div>
+        <div>• Gemini</div>
+        <div>• Claude</div>
+        <div>• DeepSeek</div>
+        <div>• Copilot</div>
+        <div>• Meta AI</div>
+        <div>• Perplexity</div>
+        <div>• You.com</div>
+        <div>• Poe</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggleButton = document.getElementById('toggle');
+  const statusDiv = document.getElementById('status');
+  
+  chrome.storage.local.get(['blockingEnabled'], function(result) {
+    const isEnabled = result.blockingEnabled !== false;
+    updateUI(isEnabled);
+  });
+  
+  toggleButton.addEventListener('click', function() {
+    chrome.storage.local.get(['blockingEnabled'], function(result) {
+      const currentState = result.blockingEnabled !== false;
+      const newState = !currentState;
+      
+      chrome.storage.local.set({blockingEnabled: newState}, function() {
+        updateUI(newState);
+        
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+          if (tabs[0]) {
+            chrome.tabs.sendMessage(tabs[0].id, {
+              action: "toggleBlocking",
+              enabled: newState
+            });
+          }
+        });
+      });
+    });
+  });
+  
+  function updateUI(isEnabled) {
+    if (isEnabled) {
+      statusDiv.textContent = 'Protección ACTIVADA';
+      statusDiv.className = 'status enabled';
+      toggleButton.textContent = 'Desactivar Protección';
+      toggleButton.className = 'disable-btn';
+    } else {
+      statusDiv.textContent = 'Protección DESACTIVADA';
+      statusDiv.className = 'status disabled';
+      toggleButton.textContent = 'Activar Protección';
+      toggleButton.className = 'enable-btn';
+    }
+  }
+});
+</script>
